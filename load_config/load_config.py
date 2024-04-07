@@ -7,7 +7,6 @@ def load_config(
         load_from_file='all',
         config_file='config.json',
         config_env_prefix='',
-        env_vars_are_upper_case=True,
         priority='env',
         ignore_missing_file=False
     ):
@@ -35,11 +34,28 @@ def load_config(
         dict: A dictionary containing the loaded configuration parameters.
     """
 
+    config_from_env = {}
+    config_from_file = {}
+
+    # Load the configuration file
+    try:
+        with open(config_file) as f:
+            config_from_file = json.load(f)
+            config_from_file = {k.lower(): v for k, v in config_from_file.items()} # Convert all keys to lower case
+    except FileNotFoundError:
+        if not ignore_missing_file:
+            raise FileNotFoundError(f"Config file not found: {config_file}")
+
+    # Convert all keys to lower case
+    required_config_params = [param.lower() for param in required_config_params]
+    os_environ_lower = {k.lower(): v for k, v in os.environ.items()}
+    config_env_prefix = config_env_prefix.lower()
+
     # determine which parameters to load from environment variables
     if load_from_env == 'required':
-        params_to_load_from_env = required_config_params
+        params_to_load_from_env = {k.lower() for k in required_config_params}
     elif load_from_env == 'all':
-        params_to_load_from_env = [os.environ]
+        params_to_load_from_env = {k[len(config_env_prefix):] for k in os_environ_lower.keys() if k.startswith(config_env_prefix)}
     elif type(load_from_env) == list:
         params_to_load_from_env = load_from_env
     else:
@@ -55,28 +71,16 @@ def load_config(
     else:
         raise ValueError("load_from_file must be 'required', 'all', or a list of config file keys")
 
-    config_from_env = {}
-    config_from_file = {}
+    config_from_env = {k[len(config_env_prefix):]: v for k, v in os_environ_lower.items() if k.startswith(config_env_prefix) and k[len(config_env_prefix):] in params_to_load_from_env}
+
+    for param in config_from_file.copy():
+        if param not in params_to_load_from_file:
+            del config_from_file[param]
 
     # get all required config parameters from environment variables
     for param in params_to_load_from_env:
-        param_modified = (config_env_prefix + param)
-        if env_vars_are_upper_case:
-            param_modified = param_modified.upper()
-        if param_modified in os.environ:
-            config_from_env[param] = os.environ[param_modified]
-
-    # Load the configuration file
-    try:
-        with open(config_file) as f:
-            config_from_file = json.load(f)
-    except FileNotFoundError:
-        if not ignore_missing_file:
-            raise FileNotFoundError(f"Config file not found: {config_file}")
-
-    for param in config_from_file:
-        if param not in params_to_load_from_file:
-            del config_from_file[param]
+        if param in os_environ_lower:
+            config_from_env[param] = os_environ_lower.get(f"{config_env_prefix}{param}")
 
     # Merge the config from the environment and the config file
     if priority == 'env':
