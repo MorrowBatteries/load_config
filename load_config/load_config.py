@@ -81,6 +81,13 @@ def load_config(
     for param in params_to_load_from_env:
         if param in os_environ_lower:
             config_from_env[param] = os_environ_lower.get(f"{config_env_prefix}{param}")
+        # if there are env.vars that start with param and a dot, then load them as a dictionary
+        # e.g. PREFIX_PARAM1.KEY1=value1, PREFIX_PARAM1.KEY2=value2
+        # results in: config['param1'] = {'key1': 'value1', 'key2': 'value2'}
+        for k, v in os_environ_lower.items():
+            if k.startswith(f"{config_env_prefix}{param}."):
+                config_from_env[param] = config_from_env.get(param, {})
+                config_from_env[param][k[len(f"{config_env_prefix}{param}."):].lower()] = v
 
     # Merge the config from the environment and the config file
     if priority == 'env':

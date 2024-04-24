@@ -123,3 +123,25 @@ def test_load_from_file_list_not_present():
         config = load_config(load_from_env='all', load_from_file=['param4_not_present'])
         m.assert_called_once_with('config.json')
         assert config.get('param3_not_present') is None
+
+def test_load_nested_env_vars():
+    mock_json = '{"param123": {"key1": "file_value1", "key2": "file_value2"}}'
+    with patch('builtins.open', mock_open(read_data=mock_json), create=True) as m:
+        os.environ['PREFIX123_PARAM123.KEY1'] = 'env_value1'
+        os.environ['PREFIX123_PARAM123.KEY2'] = 'env_value2'
+        config = load_config(required_config_params=["param123"], config_env_prefix='PREFIX123_')
+        m.assert_called_once_with('config.json')
+        assert config['param123']['key1'] == 'env_value1'
+        assert config['param123']['key2'] == 'env_value2'
+
+def test_load_nested_env_vars_with_file_priority():
+    mock_json = '{"param124": {"key1": "file_value1", "key2": "file_value2"}}'
+    with patch('builtins.open', mock_open(read_data=mock_json), create=True) as m:
+        os.environ['PREFIX124_PARAM124.KEY1'] = 'env_value1'
+        os.environ['PREFIX124_PARAM124.KEY2'] = 'env_value2'
+        config = load_config(priority='file', required_config_params=["param124"], config_env_prefix='PREFIX124_')
+        m.assert_called_once_with('config.json')
+        assert config['param124']['key1'] == 'file_value1'
+        assert config['param124']['key2'] == 'file_value2'
+
+# WARNING: when running all tests at once, keep in mind the os.environ is global and will be modified by the tests
