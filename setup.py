@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='load_config',
-    version='2024.04.24.1638',
+    version='2024.04.24.1713',
     packages=find_packages(),
     description='A library for loading configuration parameters from environment variables and a JSON file',
     author='Ronny Ager-Wick (Morrow Batteries ASA)',

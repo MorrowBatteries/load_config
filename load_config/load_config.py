@@ -87,12 +87,12 @@ def load_config(
         # results in: config['param1'] = {'key1': 'value1', 'key2': 'value2'}
         for k, v in os_environ_lower.items():
             if azure_app_services:
-                prefix = f"APPSETTING_{config_env_prefix}{param}_" # prefix added to settings in Azure App Services Configuration / Application Settings
+                prefix = f"appsetting_{config_env_prefix}{param}_" # prefix added to settings in Azure App Services Configuration / Application Settings
             else:
                 prefix = f"{config_env_prefix}{param}." # all other places than Azure App Services (as far as we know)
             if k.startswith(prefix):
                 config_from_env[param] = config_from_env.get(param, {})
-                config_from_env[param][k[len(f"{config_env_prefix}{param}."):].lower()] = v
+                config_from_env[param][k[len(prefix):].lower()] = v
 
     # Merge the config from the environment and the config file
     if priority == 'env':

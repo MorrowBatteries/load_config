@@ -144,4 +144,24 @@ def test_load_nested_env_vars_with_file_priority():
         assert config['param124']['key1'] == 'file_value1'
         assert config['param124']['key2'] == 'file_value2'
 
+def test_load_nested_env_vars_azure():
+    mock_json = '{"param125": {"key1": "file_value1", "key2": "file_value2"}}'
+    with patch('builtins.open', mock_open(read_data=mock_json), create=True) as m:
+        os.environ['APPSETTING_PREFIX125_PARAM125_KEY1'] = 'env_value1'
+        os.environ['APPSETTING_PREFIX125_PARAM125_KEY2'] = 'env_value2'
+        config = load_config(required_config_params=["param125"], config_env_prefix='PREFIX125_', azure_app_services=True)
+        m.assert_called_once_with('config.json')
+        assert config['param125']['key1'] == 'env_value1'
+        assert config['param125']['key2'] == 'env_value2'
+
+def test_load_nested_env_vars_azure_with_file_priority():
+    mock_json = '{"param126": {"key1": "file_value1", "key2": "file_value2"}}'
+    with patch('builtins.open', mock_open(read_data=mock_json), create=True) as m:
+        os.environ['APPSETTING_PREFIX126_PARAM126_KEY1'] = 'env_value1'
+        os.environ['APPSETTING_PREFIX126_PARAM126_KEY2'] = 'env_value2'
+        config = load_config(priority='file', required_config_params=["param126"], config_env_prefix='PREFIX126_', azure_app_services=True)
+        m.assert_called_once_with('config.json')
+        assert config['param126']['key1'] == 'file_value1'
+        assert config['param126']['key2'] == 'file_value2'
+
 # WARNING: when running all tests at once, keep in mind the os.environ is global and will be modified by the tests
