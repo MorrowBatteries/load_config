@@ -26,6 +26,7 @@ def load_config(
         priority (str, optional): Determines the priority of merging the config from environment and config file. 
             Possible values are 'env' or 'file'. Defaults to 'env'.
         ignore_missing_file (bool, optional): Whether to ignore if the config file is missing. Defaults to False.
+        azure_app_services (bool, optional): Whether to treat the environment as an Azure App Service environment. Defaults to False, but will be set to True if the environment variables 'WEBSITE_SITE_NAME' and 'WEBSITE_RESOURCE_GROUP' are present, as this indicates that the code is running in an Azure App Service environment.
 
     Notes:
         - The environment variables are expected to be in upper case.
@@ -77,6 +78,11 @@ def load_config(
     for param in config_from_file.copy():
         if param not in params_to_load_from_file:
             del config_from_file[param]
+
+    # detect if we're in an azure app service environment
+    if 'website_site_name' in os_environ_lower and "website_resource_group" in os_environ_lower:
+        # we're definitely in an azure app service environment
+        azure_app_services = True
 
     # get all required config parameters from environment variables
     for param in params_to_load_from_env:
