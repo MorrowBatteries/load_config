@@ -8,7 +8,8 @@ def load_config(
         config_file='config.json',
         config_env_prefix='',
         priority='env',
-        ignore_missing_file=False
+        ignore_missing_file=False,
+        azure_app_services=False
     ):
     """
     Load the configuration parameters from environment variables and a config file.
@@ -85,7 +86,11 @@ def load_config(
         # e.g. PREFIX_PARAM1.KEY1=value1, PREFIX_PARAM1.KEY2=value2
         # results in: config['param1'] = {'key1': 'value1', 'key2': 'value2'}
         for k, v in os_environ_lower.items():
-            if k.startswith(f"{config_env_prefix}{param}."):
+            if azure_app_services:
+                prefix = f"APPSETTING_{config_env_prefix}{param}_" # prefix added to settings in Azure App Services Configuration / Application Settings
+            else:
+                prefix = f"{config_env_prefix}{param}." # all other places than Azure App Services (as far as we know)
+            if k.startswith(prefix):
                 config_from_env[param] = config_from_env.get(param, {})
                 config_from_env[param][k[len(f"{config_env_prefix}{param}."):].lower()] = v
 
