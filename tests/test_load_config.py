@@ -164,4 +164,32 @@ def test_load_nested_env_vars_azure_with_file_priority():
         assert config['param126']['key1'] == 'file_value1'
         assert config['param126']['key2'] == 'file_value2'
 
+def test_load_config_param_with_dot_from_azure():
+    mock_json = '{"param127.key1": "file_value1", "param127.key2": "file_value2"}'
+    with patch('builtins.open', mock_open(read_data=mock_json), create=True) as m:
+        os.environ['APPSETTING_PREFIX127_PARAM127_KEY1'] = 'env_value1'
+        os.environ['APPSETTING_PREFIX127_PARAM127_KEY2'] = 'env_value2'
+        # here we specify both the nested dictionary and the individual keys
+        config = load_config(required_config_params=["param127", "param127.key1", "param127.key2"], config_env_prefix='PREFIX127_', azure_app_services=True)
+        m.assert_called_once_with('config.json')
+        # get the individual keys
+        assert config['param127.key1'] == 'env_value1'
+        assert config['param127.key2'] == 'env_value2'
+        # get the nested dictionary
+        assert config['param127'] == {'key1': 'env_value1', 'key2': 'env_value2'}
+
+def test_load_config_param_with_dot_not_from_azure():
+    mock_json = '{"param128.key1": "file_value1", "param128.key2": "file_value2"}'
+    with patch('builtins.open', mock_open(read_data=mock_json), create=True) as m:
+        os.environ['PREFIX128_PARAM128.KEY1'] = 'env_value1'
+        os.environ['PREFIX128_PARAM128.KEY2'] = 'env_value2'
+        # here we specify both the nested dictionary and the individual keys
+        config = load_config(required_config_params=["param128", "param128.key1", "param128.key2"], config_env_prefix='PREFIX128_')
+        m.assert_called_once_with('config.json')
+        # get the individual keys
+        assert config['param128.key1'] == 'env_value1'
+        assert config['param128.key2'] == 'env_value2'
+        # get the nested dictionary
+        assert config['param128'] == {'key1': 'env_value1', 'key2': 'env_value2'}
+
 # WARNING: when running all tests at once, keep in mind the os.environ is global and will be modified by the tests
