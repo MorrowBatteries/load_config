@@ -11,5 +11,8 @@ setup(
     description='A library for loading configuration parameters from environment variables and a JSON file',
     author='Ronny Ager-Wick (Morrow Batteries ASA)',
     author_email='ronny.ager-wick@mmorrowbatteries.com',
+    install_requires=[
+        'json5',
+    ],
     url='https://github.com/MorrowBatteries/load_config'
 )
