@@ -192,4 +192,24 @@ def test_load_config_param_with_dot_not_from_azure():
         # get the nested dictionary
         assert config['param128'] == {'key1': 'env_value1', 'key2': 'env_value2'}
 
+def test_load_config_invalid_json():
+    mock_json = '{"param1": "file_value1", "param2": "file_value2"'
+    with patch('builtins.open', mock_open(read_data=mock_json), create=True) as m:
+        with pytest.raises(ValueError) as e:
+            load_config() # pragma: no cover
+        assert str(e.value) == "Invalid JSON in config file: config.json: <string>:1 Unexpected end of input at column 50"
+
+def test_load_config_json_with_comments():
+    mock_json = '''{
+        // this is a comment
+        "param1": "file_value1", // this is a comment
+        "param2": "file_value2" // this is a comment
+        /* this is a comment */
+    }'''
+    with patch('builtins.open', mock_open(read_data=mock_json), create=True) as m:
+        config = load_config()
+        m.assert_called_once_with('config.json')
+        assert config['param1'] == 'file_value1'
+        assert config['param2'] == 'file_value2'
+
 # WARNING: when running all tests at once, keep in mind the os.environ is global and will be modified by the tests

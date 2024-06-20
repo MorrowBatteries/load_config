@@ -1,5 +1,5 @@
 import os
-import json
+import json5
 
 def load_config(
         required_config_params=[],
@@ -42,11 +42,13 @@ def load_config(
     # Load the configuration file
     try:
         with open(config_file) as f:
-            config_from_file = json.load(f)
+            config_from_file = json5.load(f)
             config_from_file = {k.lower(): v for k, v in config_from_file.items()} # Convert all keys to lower case
     except FileNotFoundError:
         if not ignore_missing_file:
             raise FileNotFoundError(f"Config file not found: {config_file}")
+    except ValueError as e:
+        raise ValueError(f"Invalid JSON in config file: {config_file}: {e}")
 
     # Convert all keys to lower case
     required_config_params = [param.lower() for param in required_config_params]
