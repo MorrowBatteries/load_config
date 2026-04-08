@@ -56,8 +56,12 @@ def load_config(
     config_env_prefix = config_env_prefix.lower()
 
     # detect if we're in an azure app service environment
-    if 'website_site_name' in os_environ_lower and "website_resource_group" in os_environ_lower:
-        # we're definitely in an azure app service environment
+    if (
+        'website_site_name' in os_environ_lower
+        or "website_resource_group" in os_environ_lower
+        or 'website_instance_id' in os_environ_lower
+        or any(k.startswith('appsetting_') for k in os_environ_lower)
+    ):
         azure_app_services = True
 
     # determine which parameters to load from environment variables
