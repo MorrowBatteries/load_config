@@ -171,6 +171,16 @@ def test_load_nested_env_vars_azure_with_file_priority():
         assert config['param126']['key1'] == 'file_value1'
         assert config['param126']['key2'] == 'file_value2'
 
+def test_load_nested_env_vars_azure_when_parent_scalar_exists():
+    mock_json = '{}'
+    with patch('builtins.open', mock_open(read_data=mock_json), create=True) as m:
+        os.environ['APPSETTING_PREFIX129_PARAM129'] = 'parent_scalar_value'
+        os.environ['APPSETTING_PREFIX129_PARAM129_KEY1'] = 'env_value1'
+        os.environ['APPSETTING_PREFIX129_PARAM129_KEY2'] = 'env_value2'
+        config = load_config(required_config_params=["param129"], config_env_prefix='PREFIX129_', azure_app_services=True)
+        m.assert_called_once_with('config.json')
+        assert config['param129'] == {'key1': 'env_value1', 'key2': 'env_value2'}
+
 def test_load_config_param_with_dot_from_azure():
     mock_json = '{"param127.key1": "file_value1", "param127.key2": "file_value2"}'
     with patch('builtins.open', mock_open(read_data=mock_json), create=True) as m:

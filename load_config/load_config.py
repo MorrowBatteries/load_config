@@ -126,7 +126,9 @@ def load_config(
         # results in: config['param1'] = {'key1': 'value1', 'key2': 'value2'}
         for k, v in os_environ_lower.items():
             if k.startswith(prefix):
-                config_from_env[param] = config_from_env.get(param, {})
+                # Azure can expose both PARAM and PARAM_KEY values; nested keys win for object-like params.
+                if not isinstance(config_from_env.get(param), dict):
+                    config_from_env[param] = {}
                 config_from_env[param][k[len(prefix):].lower()] = v
 
     # if there are dots in the required config parameters, they now have underscores if they are from Azure App Services environment variables
