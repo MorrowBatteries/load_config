@@ -5,6 +5,13 @@ from load_config import load_config
 
 # WARNING: when running all tests at once, keep in mind the os.environ is global and will be modified by the tests
 
+@pytest.fixture(autouse=True)
+def isolate_environment_variables():
+    original_environ = os.environ.copy()
+    yield
+    os.environ.clear()
+    os.environ.update(original_environ)
+
 def test_priority_env():
     mock_json = '{"param1": "file_value1", "param2": "file_value2"}'
     with patch('builtins.open', mock_open(read_data=mock_json), create=True) as m:
